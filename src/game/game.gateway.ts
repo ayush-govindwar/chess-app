@@ -51,23 +51,24 @@ import {
   
     @SubscribeMessage('makeMove')
     handleMakeMove(client: Socket, data: MoveData) {
-      const { gameId, fen, playerId } = data;
-      const result = this.gameService.validateMove(gameId, fen, playerId);
-      
-      if (result.isValid && result.updatedGame) {
-        this.server.to(gameId).emit('moveMade', result.updatedGame);
-        
-        if (result.updatedGame.isGameOver) {
-          this.server.to(gameId).emit('gameOver', {
-            result: result.updatedGame.result,
-          });
+        const { gameId, fen, playerId } = data;
+        const result = this.gameService.validateMove(gameId, fen, playerId);
+    
+        if (result.isValid && result.updatedGame) {
+            this.server.to(gameId).emit('moveMade', result.updatedGame); // Broadcast move to all players
+            
+            if (result.updatedGame.isGameOver) {
+                this.server.to(gameId).emit('gameOver', {
+                    result: result.updatedGame.result,
+                }); // Broadcast game over event
+            }
+    
+            client.emit('moveResponse', { event: 'moveSuccess', data: result.updatedGame }); // Send response only to the player who made the move
+        } else {
+            client.emit('moveResponse', { event: 'moveRejected', data: result.message }); // Send rejection to the player who made the move
         }
-        
-        return { event: 'moveSuccess', data: result.updatedGame };
-      } else {
-        return { event: 'moveRejected', data: result.message };
-      }
     }
+    
   
     @SubscribeMessage('getGameState')
     handleGetGameState(client: Socket, gameId: string) {
