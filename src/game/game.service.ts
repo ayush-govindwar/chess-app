@@ -14,6 +14,7 @@ export class GameService {
       players: [playerId],
       currentTurn: 'w',
       isGameOver: false,
+      capturedPieces: { w: [], b: [] }
     };
     this.games.set(gameId, game);
     return game;
@@ -46,11 +47,33 @@ export class GameService {
     }
 
     // Validate the move using chess.js
-    const chess = new Chess(game.fen);
+    const prevChess = new Chess(game.fen);
     const newChess = new Chess(fen);
 
-    // Check if the FEN represents a legal follow-up position
-    if (!this.isLegalNextPosition(chess, newChess)) {
+    // Check if the move is legal and identify any captures
+    const legalMoves = prevChess.moves({ verbose: true });
+    let capturedPiece ;
+    let isLegalMove = false;
+    
+    for (const move of legalMoves) {
+      const tempChess = new Chess(prevChess.fen());
+      tempChess.move(move);
+      
+      // Compare board positions (excluding move counters)
+      const tempFenParts = tempChess.fen().split(' ').slice(0, 4).join(' ');
+      const newFenParts = newChess.fen().split(' ').slice(0, 4).join(' ');
+      
+      if (tempFenParts === newFenParts) {
+        isLegalMove = true;
+        // If this move captured a piece, record it
+        if (move.captured) {
+          capturedPiece = move.captured;
+        }
+        break;
+      }
+    }
+    
+    if (!isLegalMove) {
       return { isValid: false, message: 'Illegal move' };
     }
 
@@ -58,6 +81,14 @@ export class GameService {
     game.fen = fen;
     game.currentTurn = game.currentTurn === 'w' ? 'b' : 'w';
     
+    // Update captured pieces if a piece was captured
+    if (capturedPiece) {
+      if (!game.capturedPieces) {
+        game.capturedPieces = { w: [], b: [] };
+      }
+      // Add the captured piece to the list for the player who made the capture
+      game.capturedPieces[playerColor].push(capturedPiece);
+    }
     // Check game status
     if (newChess.isGameOver()) {
       game.isGameOver = true;
