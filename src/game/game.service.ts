@@ -92,7 +92,7 @@ export class GameService {
     if (game.players.length < 2 && !game.players.includes(playerId)) {
       game.players.push(playerId);
       
-      // If this is the second player joining, set the lastMoveTime
+      // If this is the second player joining set the last move time
       if (game.players.length === 2 && game.timeControl) {
         game.timeControl.lastMoveTime = Date.now();
       }
