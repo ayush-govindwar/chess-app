@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', function() {
         showMessage('Failed to initialize board: ' + error.message, 'error');
     }
     
+
+
+    
     // Connect to WebSocket server
     function connectToServer() {
         socket = io('http://localhost:3000');
@@ -70,6 +73,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const currentTurn = game.currentTurn;
             console.log(`Starting ${currentTurn}'s timer after move`);
             startTimer(currentTurn, game.moveTimestamp);
+            
+            // Display the commentary if available
+            if (game.lastCommentary) {
+                updateCommentary(game.lastCommentary);
+            }
+        });
+        
+        // Add new listener for commentary events
+        socket.on('commentary', (data) => {
+            if (data && data.commentary) {
+                updateCommentary(data.commentary);
+            }
         });
         
         socket.on('gameOver', (data) => {
@@ -100,6 +115,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             updateTimerDisplay();
         });
+    }
+    
+    // Function to update the commentary display
+    function updateCommentary(commentary) {
+        const commentaryElement = document.getElementById('commentary');
+        if (commentaryElement) {
+            commentaryElement.innerHTML = `<strong>Commentary:</strong> ${commentary}`;
+            commentaryElement.style.animation = 'fade-in 0.5s';
+        }
     }
     
     // Create a new game
@@ -516,7 +540,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Always update the display
         displayCapturedPieces('white-captured', capturedPieces.w);
         displayCapturedPieces('black-captured', capturedPieces.b);
-    }    // Update turn display
+    }
+    
+    // Update turn display
     function updateTurnUI() {
         const turnText = chess.turn() === 'w' ? 'White' : 'Black';
         document.getElementById('turn').textContent = 'Current Turn: ' + turnText;

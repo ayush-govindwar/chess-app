@@ -5,7 +5,7 @@ import {
   OnGatewayInit,
   OnGatewayConnection,
   OnGatewayDisconnect,
-} from '@nestjs/websockets';
+ ConnectedSocket, MessageBody } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GameService } from './game.service';
 import { MoveData } from '../interface/game.interface';
@@ -59,33 +59,46 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   @SubscribeMessage('makeMove')
-  handleMakeMove(client: Socket, data: MoveData) {
-    const { gameId, fen, playerId, timestamp } = data;
+  async handleMove(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { gameId: string; fen: string; playerId: string; timestamp?: number }
+  ) {
     const serverTimestamp = Date.now();
-    
-    const result = this.gameService.validateMove(gameId, fen, playerId, timestamp, serverTimestamp);
+    const result = await this.gameService.validateMove(
+      data.gameId,
+      data.fen,
+      data.playerId,
+      data.timestamp,
+      serverTimestamp
+    );
 
     if (result.isValid && result.updatedGame) {
-      // Include time information in the moveMade event
-      this.server.to(gameId).emit('moveMade', {
+      // Send the updated game state to all players in the game
+      this.server.to(data.gameId).emit('moveMade', {
         ...result.updatedGame,
         moveTimestamp: serverTimestamp
       });
-      
-      if (result.updatedGame.isGameOver) {
-        this.server.to(gameId).emit('gameOver', {
-          result: result.updatedGame.result,
+
+      // Check if the game includes a commentary and emit it
+      if (result.updatedGame.lastCommentary) {
+        this.server.to(data.gameId).emit('commentary', {
+          gameId: data.gameId,
+          commentary: result.updatedGame.lastCommentary
         });
       }
 
-      client.emit('moveResponse', { 
-        event: 'moveSuccess', 
-        data: result.updatedGame 
-      });
+      // Check if the game is over
+      if (result.updatedGame.isGameOver) {
+        this.server.to(data.gameId).emit('gameOver', {
+          gameId: data.gameId,
+          result: result.updatedGame.result
+        });
+      }
     } else {
-      client.emit('moveResponse', { 
-        event: 'moveRejected', 
-        data: result.message 
+      // Send a move rejection event to the client
+      client.emit('moveResponse', {
+        event: 'moveRejected',
+        data: result.message
       });
     }
   }

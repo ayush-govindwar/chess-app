@@ -329,3 +329,35 @@ button:active {
     margin-top: 10px;
     display: none;
 }
+
+/* Your existing CSS stays the same, just need to update the commentary section */
+
+/* Commentary container styles - updated */
+#commentary-container {
+    margin: 20px 0;
+}
+
+#commentary {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--secondary-color);
+    font-family: 'Roboto', 'Segoe UI', 'Arial', sans-serif;
+    color: var(--dark-color);
+    font-size: 16px;
+    line-height: 1.5;
+    min-height: 60px;
+    transition: all 0.3s ease;
+}
+
+/* Animation for new commentary */
+@keyframes highlight {
+    0% { background-color: #e3f2fd; }
+    50% { background-color: #bbdefb; }
+    100% { background-color: #f8f9fa; }
+}
+
+/* This class can be added via JavaScript when commentary updates */
+.commentary-update {
+    animation: highlight 1.5s ease;
+}

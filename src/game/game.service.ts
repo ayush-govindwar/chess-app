@@ -1,11 +1,69 @@
 import { Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { GameState, MoveData } from '../interface/game.interface';
 import { Chess } from 'chess.js';
+import axios from 'axios';
 
 @Injectable()
 export class GameService {
   private games: Map<string, GameState> = new Map();
 
+  constructor(private readonly httpService: HttpService) {}
+
+  // Add the new method to fetch evaluation and generate commentary
+  async getCommentaryForMove(fen: string): Promise<string> {
+    try {
+      // Encode the FEN string properly for URL
+      const encodedFen = encodeURIComponent(fen);
+      const url = `http://www.chessdb.cn/cdb.php?action=queryscore&board=${encodedFen}`;
+      
+      const response = await axios.get(url);
+      const data = response.data;
+      
+      // Parse the response to extract the evaluation score
+      // The response format might be something like "score:123"
+      let evalScore = 0;
+      if (typeof data === 'string' && data.includes('eval')) {
+        const scoreMatch = data.match(/eval:(-?\d+)/);
+        if (scoreMatch && scoreMatch[1]) {
+          evalScore = parseInt(scoreMatch[1]);
+        }
+      }
+      
+      // Generate commentary based on the evaluation score
+      return this.generateChessComment(evalScore);
+    } catch (error) {
+      console.error('Error fetching chess evaluation:', error);
+      return "Position evaluation unavailable. Keep playing! 🎮";
+    }
+  }
+  
+  // Function to generate commentary based on eval score
+  private generateChessComment(evalScore: number): string {
+    if (evalScore > 1000) {
+      return "White has a forced checkmate! ♔🔥";
+    } else if (evalScore > 500) {
+      return "White is completely winning! Just don't blunder. 👍";
+    } else if (evalScore > 200) {
+      return "White has a huge advantage. Convert carefully! ✅";
+    } else if (evalScore > 100) {
+      return "White is ahead, but Black can still fight. ⚔️";
+    } else if (evalScore > 50) {
+      return "White has a small edge. Precise play is needed. 🧐";
+    } else if (evalScore > -50) {
+      return "It's an equal game. Anything can happen! 🤝";
+    } else if (evalScore > -100) {
+      return "Black has a slight edge. Stay sharp! 🦉";
+    } else if (evalScore > -200) {
+      return "Black is slightly better. White needs to defend. 🏰";
+    } else if (evalScore > -500) {
+      return "Black has a strong advantage. White must fight back! ⏳";
+    } else if (evalScore > -1000) {
+      return "Black is completely winning! Just finish it cleanly. ⚡";
+    } else {
+      return "Black has a forced checkmate! ♚🔥";
+    }
+  }
   createGame(gameId: string, playerId: string, initialTime: number = 600): GameState {
     const chess = new Chess();
     const game: GameState = {
@@ -43,13 +101,13 @@ export class GameService {
     return game;
   }
 
-  validateMove(
+ async validateMove(
     gameId: string, 
     fen: string, 
     playerId: string, 
     clientTimestamp?: number,
     serverTimestamp?: number
-  ): { isValid: boolean; updatedGame?: GameState; message?: string } {
+  ): Promise<{ isValid: boolean; updatedGame?: GameState; message?: string }>{
     const game = this.games.get(gameId);
     if (!game) {
       return { isValid: false, message: 'Game not found' };
@@ -95,6 +153,9 @@ export class GameService {
 
     // Update the game state
     game.fen = fen;
+    // Get commentary for the new position
+    const commentary = await this.getCommentaryForMove(fen);
+    game.lastCommentary = commentary;
     
     // Update timer data
     if (game.timeControl) {
