@@ -20,8 +20,6 @@ export class GameService {
       const response = await axios.get(url);
       const data = response.data;
       
-      // Parse the response to extract the evaluation score
-      // The response format might be something like "score:123"
       let evalScore = 0;
       if (typeof data === 'string' && data.includes('eval')) {
         const scoreMatch = data.match(/eval:(-?\d+)/);
@@ -30,7 +28,7 @@ export class GameService {
         }
       }
       
-      // Generate commentary based on the evaluation score
+
       return this.generateChessComment(evalScore);
     } catch (error) {
       console.error('Error fetching chess evaluation:', error);
@@ -153,9 +151,6 @@ export class GameService {
 
     // Update the game state
     game.fen = fen;
-    // Get commentary for the new position
-    // const commentary = await this.getCommentaryForMove(fen);
-    // game.lastCommentary = commentary;
     
     // Update timer data
     if (game.timeControl) {
@@ -226,9 +221,6 @@ export class GameService {
         game.isGameOver = true;
         game.result = `Player ${playerIndex === 0 ? 'White' : 'Black'} disconnected`;
         
-        // Notify other players in the game
-        // This would need to be done via the Gateway - consider adding a method there
-        // or injecting an event emitter service both services could use
         
         this.games.set(gameId, game);
       }
@@ -244,7 +236,7 @@ export class GameService {
       const tempBoard = new Chess(prevBoard.fen());
       tempBoard.move(move);
       
-      // If the FEN (excluding move counters) matches, it's a legal follow-up position
+    
       const tempFenParts = tempBoard.fen().split(' ').slice(0, 4).join(' ');
       const newFenParts = newBoard.fen().split(' ').slice(0, 4).join(' ');
       

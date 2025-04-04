@@ -134,10 +134,10 @@ document.addEventListener('DOMContentLoaded', function() {
             connectToServer();
         }
         
-        // Generate a unique game ID
+
         gameId = generateGameId();
         
-        // Display the game ID
+        // Display the game Id
         document.getElementById('game-id').textContent = gameId;
         document.getElementById('game-id-display').style.display = 'block';
         
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const now = Date.now();
             const elapsed = now - lastMoveTimestamp;
             
-            // Decrement the active timer
+
             timers[color] -= elapsed;
             
             // Make sure timer doesn't go below zero
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('white-timer').textContent = whiteTime;
         document.getElementById('black-timer').textContent = blackTime;
         
-        // Highlight active timer
+        // highlight active timer
         document.getElementById('white-timer').className = activeTimer === 'w' ? 'timer active' : 'timer';
         document.getElementById('black-timer').className = activeTimer === 'b' ? 'timer active' : 'timer';
         
@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
     
-    // Request timer sync from server
+    // timer sync from server
     function syncTimersWithServer() {
         if (socket && gameId) {
             socket.emit('timerSync', {
@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Copy game ID to clipboard
+    // copy game Id
     document.getElementById('copy-id-btn').addEventListener('click', function() {
         const gameIdElement = document.getElementById('game-id');
         const range = document.createRange();
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeBoard() {
         try {
             console.log("Starting board initialization");
-            // If board already exists, destroy it first
+            // If board already exists destroy it 
             if (board) {
                 console.log("Destroying existing board");
                 board.destroy();
@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Add window resize event to make the board responsive
             $(window).resize(board.resize);
-            // Reset the chess.js instance
+            // Reset chess.js 
             chess = new Chess();
             console.log("Board initialization complete");
 
@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Check if the move is legal
         try {
-            // Create a move object
+           
             const moveObj = {
                 from: source,
                 to: target,
@@ -447,10 +447,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // NOTE: We're not updating captured pieces here anymore
-            // The server will send back the updated game state with capture information
-            
-            // Update move history
             updateMoveHistory();
             
             // Toggle player turn
@@ -617,5 +613,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Periodically sync timers with server to prevent desync
-    setInterval(syncTimersWithServer, 10000); // Sync every 10 seconds
+    setInterval(syncTimersWithServer, 10000); // sync every 10 seconds
 });

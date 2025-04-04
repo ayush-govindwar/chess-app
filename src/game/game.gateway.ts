@@ -47,7 +47,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       this.server.to(gameId).emit('playerJoined', game); // Notify other players
       client.emit('joinGameResponse', { event: 'gameJoined', data: game }); // Send response only to the requester
       
-      // If this is the second player joining (game starting), start the timer for white
+      // If this is the second player joining, start the timer for white
       if (game.players.length === 2) {
         this.server.to(gameId).emit('gameStarted', {
           timeControl: game.timeControl

@@ -14,7 +14,7 @@ export interface GameState {
     timeLeft: { w: number; b: number };
     lastMoveTime: number;
   };
-  lastCommentary?: string; // Added this field for the position commentary
+  lastCommentary?: string; 
 }
 
 export interface MoveData {
