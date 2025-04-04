@@ -121,8 +121,8 @@ export class GameService {
     }
 
     // Validate the move using chess.js
-    const prevChess = new Chess(game.fen);
-    const newChess = new Chess(fen);
+    const prevChess = new Chess(game.fen); // old fen
+    const newChess = new Chess(fen); // new fen
 
     // Check if the move is legal and identify any captures
     const legalMoves = prevChess.moves({ verbose: true });
@@ -133,7 +133,7 @@ export class GameService {
       const tempChess = new Chess(prevChess.fen());
       tempChess.move(move);
       
-      // Compare board positions (excluding move counters)
+      // Compare board positions 
       const tempFenParts = tempChess.fen().split(' ').slice(0, 4).join(' ');
       const newFenParts = newChess.fen().split(' ').slice(0, 4).join(' ');
       
@@ -154,8 +154,8 @@ export class GameService {
     // Update the game state
     game.fen = fen;
     // Get commentary for the new position
-    const commentary = await this.getCommentaryForMove(fen);
-    game.lastCommentary = commentary;
+    // const commentary = await this.getCommentaryForMove(fen);
+    // game.lastCommentary = commentary;
     
     // Update timer data
     if (game.timeControl) {

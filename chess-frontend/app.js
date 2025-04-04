@@ -1,12 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize variables
     let socket;
     let chess = new Chess();
     let board = null;
     let gameId = null;
     let playerColor = null;
     let isPlayerTurn = false;
-    let timers = { w: 600000, b: 600000 }; // Default 10 minutes per player
+    let timers = { w: 600000, b: 600000 }; // remaining time 
     let timerInterval = null;
     let lastMoveTimestamp = Date.now();
     let capturedPieces = { w: [], b: [] };
@@ -27,7 +26,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Connect to WebSocket server
     function connectToServer() {
-        socket = io('https://chess-app-9opx.onrender.com');
+        socket = io('https://chess-app-9opx.onrender.com', {
+            transports: ['websocket'],  
+            upgrade: false 
+        });
         
         // Socket event listeners
         socket.on('connect', () => {
@@ -278,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('white-timer').className = activeTimer === 'w' ? 'timer active' : 'timer';
         document.getElementById('black-timer').className = activeTimer === 'b' ? 'timer active' : 'timer';
         
-        // Add warning class when timer is low (less than 30 seconds)
+        // less than 30 seconds
         if (timers.w <= 30000) {
             document.getElementById('white-timer').classList.add('warning');
         } else {
@@ -362,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Handle piece drag start
+    // if piece can be picked up and moved
     function onDragStart(source, piece) {
         // Only allow the current player to move their pieces
         if (!isPlayerTurn || chess.game_over()) {
@@ -407,8 +409,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 promotion: promotion || 'q' // Default to queen if not specified
             };
             
-            // Check if the move is legal in the client-side chess.js
-            const move = chess.move(moveObj);
+            // check if the move is legal in the client-side chess.js
+            const move = chess.move(moveObj); // attempts to execute a move and updates the board if valid. Returns null if the move is illegal.
+
             
             if (move === null) {
                 console.log('Illegal move detected');
@@ -558,7 +561,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateMoveHistory() {
         const pgnElement = document.getElementById('pgn');
         pgnElement.textContent = chess.pgn();
-        pgnElement.scrollTop = pgnElement.scrollHeight;
+        pgnElement.scrollTop = pgnElement.scrollHeight; // latest moves always visible
     }
     
     // Display captured pieces in the UI
